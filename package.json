@@ -1,8 +1,8 @@
 {
-  "name": "cmake-template",
-  "displayName": "cmake_template",
+  "name": "project-template",
+  "displayName": "project template",
   "description": "the template of cmake project and third library",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.92.0"
   },
@@ -14,16 +14,19 @@
   "contributes": {
     "commands": [
       {
-        "command": "cmake-template.cmake-project",
-        "title": "CMake Project"
+        "command": "project-template.cmake-project",
+        "title": "New Project",
+        "category": "CMake"
       },
       {
-        "command": "cmake-template.cmake-third-lib",
-        "title": "CMake Third Lib"
+        "command": "project-template.cmake-third-lib",
+        "title": "New Lib",
+        "category": "CMake"
       },
       {
-        "command": "cmake-template.cmake-third-lib-example",
-        "title": "CMake Third Lib Example"
+        "command": "project-template.cmake-third-lib-example",
+        "title": "New Example",
+        "category": "CMake"
       }
     ]
   },

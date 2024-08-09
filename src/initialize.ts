@@ -21,7 +21,6 @@ export async function initialize_cmake_third_lib() {
         const project_name = await get_project_name(workspace_basename);
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
-        await create_launch_task(project_name, project_path, workspace_folder.uri);
     }
 }
 export async function initialize_cmake_third_lib_example() {
@@ -54,7 +53,9 @@ async function create_build_task(project_name: string, project_path: string, wor
     });
     // try to touch tasks.json
     if (!fs.existsSync(tasks_json_uri.path)) {
+        vscode.window.showWarningMessage('tasks.json not existed');
         await vscode.commands.executeCommand('workbench.action.tasks.configureDefaultBuildTask');
+        return;
     }
     fs.readFile(tasks_json_uri.path, 'utf8', (err, old_content) => {
         if (err) return;
@@ -81,7 +82,7 @@ async function create_launch_task(project_name: string, project_path: string, wo
     });
     // try to touch launch.json
     if (!fs.existsSync(launch_json_uri.path)) {
-        await vscode.commands.executeCommand('workbench.action.debug.start');
+        vscode.window.showWarningMessage('launch.json not existed');
     }
     fs.readFile(launch_json_uri.path, 'utf8', (err, old_content) => {
         if (err) return;
@@ -94,7 +95,7 @@ async function create_launch_task(project_name: string, project_path: string, wo
             });
         }
         catch (e) {
-            console.error("Error in parsing tasks.json content: ", e);
+            console.error("Error in parsing launch.json content: ", e);
         }
     });
 }
