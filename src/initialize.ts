@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import path = require('path');
-import fs = require('fs')
+import fs = require('fs');
 import { parse, stringify } from 'comment-json';
+const axios = require('axios');
 
 export async function initialize_cmake_project() {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -11,7 +12,7 @@ export async function initialize_cmake_project() {
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
-        touch_project_file(project_name, workspace_folder.uri);
+        create_project_file(project_name, workspace_folder.uri);
     }
 }
 export async function initialize_cmake_third_lib() {
@@ -21,7 +22,7 @@ export async function initialize_cmake_third_lib() {
         const project_name = await get_project_name(workspace_basename);
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
-        touch_third_lib_file(project_name, workspace_folder.uri);
+        create_third_lib_file(project_name, workspace_folder.uri);
     }
 }
 export async function initialize_cmake_third_lib_example() {
@@ -32,7 +33,7 @@ export async function initialize_cmake_third_lib_example() {
         const project_path = '/example/' + project_name;
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
-        touch_example_file(project_name, workspace_folder.uri);
+        create_example_file(project_name, workspace_folder.uri);
     }
 }
 
@@ -177,20 +178,20 @@ function _M_create_launch_task(project_name: string, project_path: string, data:
     return data;
 }
 
-function touch_project_file(project_name: string, workspace_uri: vscode.Uri) {
+function create_project_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['doc']);
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
     _M_mkdir(workspace_uri, ['third']);
     _M_mkdir(workspace_uri, ['cmake']);
-    _M_touch(workspace_uri, ['.gitignore']);
-    _M_touch(workspace_uri, ['CMakeLists.txt']);
-    _M_touch(workspace_uri, ['src', 'CMakeLists.txt']);
-    _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'project_template', ['.gitignore']);
+    _M_touch_from_repo(workspace_uri, 'project_template', ['CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'project_template', ['src', 'CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'project_template', ['third', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['README.md']);
     _M_touch(workspace_uri, ['main.cpp']);
 }
-function touch_example_file(project_name: string, workspace_uri: vscode.Uri) {
+function create_example_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['example', project_name]);
     _M_mkdir(workspace_uri, ['example', project_name, 'include']);
     _M_mkdir(workspace_uri, ['example', project_name, 'src']);
@@ -201,27 +202,27 @@ function touch_example_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_touch(workspace_uri, ['example', project_name, 'main.cpp']);
     _M_touch(workspace_uri, ['doc', project_name, 'usage.md']);
 }
-function touch_third_lib_file(project_name: string, workspace_uri: vscode.Uri) {
+function create_third_lib_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['doc']);
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
     _M_mkdir(workspace_uri, ['third']);
     _M_mkdir(workspace_uri, ['cmake']);
-    _M_touch(workspace_uri, ['.gitignore']);
-    _M_touch(workspace_uri, ['CMakeLists.txt']);
-    _M_touch(workspace_uri, ['src', 'CMakeLists.txt']);
-    _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['.gitignore']);
+    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['src', 'CMakeLists.txt']);
+    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['third', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['README.md']);
     _M_touch(workspace_uri, ['main.cpp']);
 }
 
 function _M_mkdir(workspace_uri: vscode.Uri, paths: string[]) {
     try {
-        const _uri = workspace_uri.with({
+        const file_uri = workspace_uri.with({
             path: path.join(workspace_uri.path, ...paths)
         });
-        if (!fs.existsSync(_uri.fsPath)) {
-            fs.mkdirSync(_uri.fsPath, { recursive: true });
+        if (!fs.existsSync(file_uri.fsPath)) {
+            fs.mkdirSync(file_uri.fsPath, { recursive: true });
         }
     }
     catch (e) {
@@ -230,14 +231,41 @@ function _M_mkdir(workspace_uri: vscode.Uri, paths: string[]) {
 }
 function _M_touch(workspace_uri: vscode.Uri, paths: string[]) {
     try {
-        const _uri = workspace_uri.with({
+        const file_uri = workspace_uri.with({
             path: path.join(workspace_uri.path, ...paths)
         });
-        if (!fs.existsSync(_uri.fsPath)) {
-            fs.writeFileSync(_uri.fsPath, '');
+        if (!fs.existsSync(file_uri.fsPath)) {
+            fs.writeFileSync(file_uri.fsPath, '', 'utf8');
         }
     }
     catch (e) {
         vscode.window.showErrorMessage(`Fail to create file : ${e}`);
     }
+}
+function _M_touch_from_repo(workspace_uri: vscode.Uri, repo: string, paths: string[]) {
+    try {
+        const file_uri = workspace_uri.with({
+            path: path.join(workspace_uri.path, ...paths)
+        });
+        if (!fs.existsSync(file_uri.fsPath)) {
+            _M_write_file_from_git_repository(file_uri, repo, paths.join('/'));
+        }
+    }
+    catch (e) {
+        vscode.window.showErrorMessage(`Fail to create file : ${e}`);
+    }
+}
+function _M_get_git_repository_url(owner: string, repo: string, branch: string, file: string) {
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${file}`;
+}
+async function _M_get_url_content(url: string) {
+    const response = await axios.get(url);
+    return response.data;
+}
+async function _M_write_file_from_git_repository(file_uri: vscode.Uri, repo: string, file: string) {
+    const owner = '1nchy'
+    const branch = 'master'
+    const url = _M_get_git_repository_url(owner, repo, branch, file);
+    const url_content = await _M_get_url_content(url);
+    fs.writeFileSync(file_uri.path, url_content, 'utf8');
 }
