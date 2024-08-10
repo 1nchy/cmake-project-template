@@ -1,6 +1,6 @@
-# project-template README
+# cmake-project-template README
 
-This is the README for your extension "project-template". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "cmake-project-template". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
