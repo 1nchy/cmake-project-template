@@ -8,7 +8,7 @@ export async function initialize_cmake_project() {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         const workspace_folder = vscode.workspace.workspaceFolders[0];
         const workspace_basename = workspace_folder.name;
-        const project_name = await get_project_name(workspace_basename);
+        const project_name = workspace_basename;
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
@@ -19,7 +19,7 @@ export async function initialize_cmake_third_lib() {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         const workspace_folder = vscode.workspace.workspaceFolders[0];
         const workspace_basename = workspace_folder.name;
-        const project_name = await get_project_name(workspace_basename);
+        const project_name = workspace_basename;
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
         create_third_lib_file(project_name, workspace_folder.uri);
@@ -29,7 +29,11 @@ export async function initialize_cmake_third_lib_example() {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         const workspace_folder = vscode.workspace.workspaceFolders[0];
         const workspace_basename = workspace_folder.name;
-        const project_name = await get_project_name(workspace_basename + '_example');
+        const project_name = await get_project_name('', 'example name');
+        if (project_name.length === 0) {
+            vscode.window.showInformationMessage('Example name can\'t be empty');
+            return;
+        }
         const project_path = '/example/' + project_name;
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
@@ -37,9 +41,9 @@ export async function initialize_cmake_third_lib_example() {
     }
 }
 
-async function get_project_name(default_name: string) {
+async function get_project_name(default_name: string, prompt: string) {
     const project_name = await vscode.window.showInputBox({
-        prompt: 'project name'
+        prompt: prompt
     });
     if (project_name && project_name.length > 0) {
         return project_name;
