@@ -178,42 +178,58 @@ function _M_create_launch_task(project_name: string, project_path: string, data:
     return data;
 }
 
-function create_project_file(project_name: string, workspace_uri: vscode.Uri) {
+async function create_project_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['doc']);
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
     _M_mkdir(workspace_uri, ['third']);
     _M_mkdir(workspace_uri, ['cmake']);
-    _M_touch_from_repo(workspace_uri, 'project_template', ['.gitignore']);
-    _M_touch_from_repo(workspace_uri, 'project_template', ['CMakeLists.txt']);
-    _M_touch_from_repo(workspace_uri, 'project_template', ['src', 'CMakeLists.txt']);
-    _M_touch_from_repo(workspace_uri, 'project_template', ['third', 'CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['.gitignore']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['src', 'CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['third', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['README.md']);
     _M_touch(workspace_uri, ['main.cpp']);
+
+    _M_substitute_project_name(project_name, workspace_uri.with({
+        path: path.join(workspace_uri.path, 'CMakeLists.txt')
+    }));
 }
-function create_example_file(project_name: string, workspace_uri: vscode.Uri) {
+async function create_example_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['example', project_name]);
     workspace_uri = workspace_uri.with({
         path: path.join(workspace_uri.path, 'example', project_name)
     });
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
-    _M_touch_from_repo(workspace_uri, 'example_template', ['.gitignore']);
-    _M_touch_from_repo(workspace_uri, 'example_template', ['CMakeLists.txt']);
-    _M_touch_from_repo(workspace_uri, 'example_template', ['src', 'CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'example_template', ['.gitignore']);
+    await _M_touch_from_repo(workspace_uri, 'example_template', ['CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'example_template', ['src', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['main.cpp']);
+
+    _M_substitute_project_name(project_name, workspace_uri.with({
+        path: path.join(workspace_uri.path, 'CMakeLists.txt')
+    }));
+    vscode.window.showInformationMessage('Substitute <third_lib_name>')
+    // _M_substitute_third_lib_name(project_name, workspace_uri.with({
+    //     path: path.join(workspace_uri.path, 'CMakeLists.txt')
+    // }));
 }
-function create_third_lib_file(project_name: string, workspace_uri: vscode.Uri) {
+async function create_third_lib_file(project_name: string, workspace_uri: vscode.Uri) {
     _M_mkdir(workspace_uri, ['doc']);
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
     _M_mkdir(workspace_uri, ['third']);
     _M_mkdir(workspace_uri, ['cmake']);
-    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['.gitignore']);
-    _M_touch_from_repo(workspace_uri, 'third_lib_template', ['CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'third_lib_template', ['.gitignore']);
+    await _M_touch_from_repo(workspace_uri, 'third_lib_template', ['CMakeLists.txt']);
     _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['README.md']);
     _M_touch(workspace_uri, ['main.cpp']);
+
+    _M_substitute_third_lib_name(project_name, workspace_uri.with({
+        path: path.join(workspace_uri.path, 'CMakeLists.txt')
+    }));
 }
 
 function _M_mkdir(workspace_uri: vscode.Uri, paths: string[]) {
@@ -242,13 +258,13 @@ function _M_touch(workspace_uri: vscode.Uri, paths: string[]) {
         vscode.window.showErrorMessage(`Fail to create file : ${e}`);
     }
 }
-function _M_touch_from_repo(workspace_uri: vscode.Uri, repo: string, paths: string[]) {
+async function _M_touch_from_repo(workspace_uri: vscode.Uri, repo: string, paths: string[]) {
     try {
         const file_uri = workspace_uri.with({
             path: path.join(workspace_uri.path, ...paths)
         });
         if (!fs.existsSync(file_uri.fsPath)) {
-            _M_write_file_from_git_repository(file_uri, repo, paths.join('/'));
+            await _M_write_file_from_git_repository(file_uri, repo, paths.join('/'));
         }
     }
     catch (e) {
@@ -273,5 +289,31 @@ async function _M_write_file_from_git_repository(file_uri: vscode.Uri, repo: str
     catch (e) {
         vscode.window.showWarningMessage(`Fail to fetch content: ${e}`);
         fs.writeFileSync(file_uri.path, '', 'utf8');
+    }
+}
+function _M_substitute_project_name(project_name: string, file_uri: vscode.Uri) {
+    const regex = new RegExp('<project_name>', 'g');
+    try {
+        fs.readFile(file_uri.path, 'utf8', (e, content) => {
+            if (e) return;
+            const new_content = content.replace(regex, project_name);
+            fs.writeFileSync(file_uri.path, new_content, 'utf8');
+        });
+    }
+    catch (e) {
+        vscode.window.showWarningMessage(`Fail to substitute: ${e}`)
+    }
+}
+function _M_substitute_third_lib_name(third_lib_name: string, file_uri: vscode.Uri) {
+    const regex = new RegExp('<third_lib_name>', 'g');
+    try {
+        fs.readFile(file_uri.path, 'utf8', (e, content) => {
+            if (e) return;
+            const new_content = content.replace(regex, third_lib_name);
+            fs.writeFileSync(file_uri.path, new_content, 'utf8');
+        });
+    }
+    catch (e) {
+        vscode.window.showWarningMessage(`Fail to substitute: ${e}`)
     }
 }
