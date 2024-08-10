@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import path = require('path');
 import fs = require('fs')
 import { parse, stringify } from 'comment-json';
-import { request } from 'http';
 
 export async function initialize_cmake_project() {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -12,6 +11,7 @@ export async function initialize_cmake_project() {
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
+        touch_project_file(project_name, workspace_folder.uri);
     }
 }
 export async function initialize_cmake_third_lib() {
@@ -21,6 +21,7 @@ export async function initialize_cmake_third_lib() {
         const project_name = await get_project_name(workspace_basename);
         const project_path = '';
         await create_build_task(project_name, project_path, workspace_folder.uri);
+        touch_third_lib_file(project_name, workspace_folder.uri);
     }
 }
 export async function initialize_cmake_third_lib_example() {
@@ -31,6 +32,7 @@ export async function initialize_cmake_third_lib_example() {
         const project_path = '/example/' + project_name;
         await create_build_task(project_name, project_path, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
+        touch_example_file(project_name, workspace_folder.uri);
     }
 }
 
@@ -173,4 +175,69 @@ function _M_create_launch_task(project_name: string, project_path: string, data:
         data.configurations.push(launch_task);
     }
     return data;
+}
+
+function touch_project_file(project_name: string, workspace_uri: vscode.Uri) {
+    _M_mkdir(workspace_uri, ['doc']);
+    _M_mkdir(workspace_uri, ['include']);
+    _M_mkdir(workspace_uri, ['src']);
+    _M_mkdir(workspace_uri, ['third']);
+    _M_mkdir(workspace_uri, ['cmake']);
+    _M_touch(workspace_uri, ['.gitignore']);
+    _M_touch(workspace_uri, ['CMakeLists.txt']);
+    _M_touch(workspace_uri, ['src', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['README.md']);
+    _M_touch(workspace_uri, ['main.cpp']);
+}
+function touch_example_file(project_name: string, workspace_uri: vscode.Uri) {
+    _M_mkdir(workspace_uri, ['example', project_name]);
+    _M_mkdir(workspace_uri, ['example', project_name, 'include']);
+    _M_mkdir(workspace_uri, ['example', project_name, 'src']);
+    _M_mkdir(workspace_uri, ['doc', project_name]);
+    _M_touch(workspace_uri, ['example', project_name, '.gitignore']);
+    _M_touch(workspace_uri, ['example', project_name, 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['example', project_name, 'src', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['example', project_name, 'main.cpp']);
+    _M_touch(workspace_uri, ['doc', project_name, 'usage.md']);
+}
+function touch_third_lib_file(project_name: string, workspace_uri: vscode.Uri) {
+    _M_mkdir(workspace_uri, ['doc']);
+    _M_mkdir(workspace_uri, ['include']);
+    _M_mkdir(workspace_uri, ['src']);
+    _M_mkdir(workspace_uri, ['third']);
+    _M_mkdir(workspace_uri, ['cmake']);
+    _M_touch(workspace_uri, ['.gitignore']);
+    _M_touch(workspace_uri, ['CMakeLists.txt']);
+    _M_touch(workspace_uri, ['src', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['README.md']);
+    _M_touch(workspace_uri, ['main.cpp']);
+}
+
+function _M_mkdir(workspace_uri: vscode.Uri, paths: string[]) {
+    try {
+        const _uri = workspace_uri.with({
+            path: path.join(workspace_uri.path, ...paths)
+        });
+        if (!fs.existsSync(_uri.fsPath)) {
+            fs.mkdirSync(_uri.fsPath, { recursive: true });
+        }
+    }
+    catch (e) {
+        vscode.window.showErrorMessage(`Fail to create folder : ${e}`);
+    }
+}
+function _M_touch(workspace_uri: vscode.Uri, paths: string[]) {
+    try {
+        const _uri = workspace_uri.with({
+            path: path.join(workspace_uri.path, ...paths)
+        });
+        if (!fs.existsSync(_uri.fsPath)) {
+            fs.writeFileSync(_uri.fsPath, '');
+        }
+    }
+    catch (e) {
+        vscode.window.showErrorMessage(`Fail to create file : ${e}`);
+    }
 }
