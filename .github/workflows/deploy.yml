@@ -23,15 +23,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: "20.x"
-    - name: DevDependency
-      run: |
-        npm install -g @types/mocha @types/node @types/vscode
-        npm install -g @typescript-eslint/eslint-plugin @typescript-eslint/parser
-        npm install -g @vscode/test-cli @vscode/test-electron
-        npm install -g eslint typescript
     - name: Dependency
       run: |
-        npm install -g vsce axios comment-json
+        npm install
     - name: Package
       run: |
         vsce package
