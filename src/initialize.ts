@@ -90,6 +90,7 @@ async function create_launch_task(project_name: string, project_path: string, wo
     // try to touch launch.json
     if (!fs.existsSync(launch_json_uri.path)) {
         vscode.window.showWarningMessage('launch.json not existed');
+        return;
     }
     fs.readFile(launch_json_uri.path, 'utf8', (err, old_content) => {
         if (err) return;
