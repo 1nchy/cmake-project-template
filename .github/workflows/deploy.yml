@@ -2,14 +2,8 @@ name: Deploy VSCode Plugin
 
 on:
   push:
-    branches:
-      - master
-
-  release:
-    types:
-      - published
- 
-  workflow_dispatch:
+    tags:
+      - "v*"
 
 jobs:
   build:
