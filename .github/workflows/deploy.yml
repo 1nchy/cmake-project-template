@@ -2,14 +2,8 @@ name: Deploy VSCode Plugin
 
 on:
   push:
-    branches:
-      - master
-
-  release:
-    types:
-      - published
- 
-  workflow_dispatch:
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -30,8 +24,22 @@ jobs:
       run: |
         npm install -g vsce
         vsce package
-    - name: Deploy
-      uses: actions/upload-artifact@v4
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.RELEASE_TOKEN}}
       with:
-        name: vsix
-        path: ./*.vsix
+        tag_name: ${{github.ref}}
+        release_name: Release ${{github.ref.name}}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.RELEASE_TOKEN}}
+      with:
+        upload_url: ${{steps.create_release.outputs.upload_url}}
+        asset_path: ./cmake-project-template-1.0.0.vsix
+        asset_name: cmake-project-template-${{github.ref.name}}.vsix
+        asset_content_type: application/vsix
