@@ -207,9 +207,11 @@ async function create_example_file(project_name: string, third_lib_name: string,
     });
     _M_mkdir(workspace_uri, ['include']);
     _M_mkdir(workspace_uri, ['src']);
+    _M_mkdir(workspace_uri, ['cmake']);
     await _M_touch_from_repo(workspace_uri, 'example_template', ['.gitignore']);
     await _M_touch_from_repo(workspace_uri, 'example_template', ['CMakeLists.txt']);
     await _M_touch_from_repo(workspace_uri, 'example_template', ['src', 'CMakeLists.txt']);
+    _M_touch(workspace_uri, ['main.cpp']);
 
     _M_substitute_project_name(project_name, workspace_uri.with({
         path: path.join(workspace_uri.path, 'CMakeLists.txt')
@@ -228,7 +230,6 @@ async function create_third_lib_file(project_name: string, workspace_uri: vscode
     await _M_touch_from_repo(workspace_uri, 'third_lib_template', ['CMakeLists.txt']);
     _M_touch(workspace_uri, ['third', 'CMakeLists.txt']);
     _M_touch(workspace_uri, ['README.md']);
-    _M_touch(workspace_uri, ['main.cpp']);
 
     _M_substitute_third_lib_name(project_name, workspace_uri.with({
         path: path.join(workspace_uri.path, 'CMakeLists.txt')
