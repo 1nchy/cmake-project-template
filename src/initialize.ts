@@ -35,7 +35,7 @@ export async function initialize_cmake_third_lib_example() {
             return;
         }
         const project_path = '/example/' + project_name;
-        await create_build_task(project_name, project_path, workspace_folder.uri);
+        await create_example_build_task(project_name, project_path, workspace_basename, workspace_folder.uri);
         await create_launch_task(project_name, project_path, workspace_folder.uri);
         create_example_file(project_name, workspace_basename, workspace_folder.uri);
     }
@@ -72,6 +72,35 @@ async function create_build_task(project_name: string, project_path: string, wor
             data = _M_create_mkdir_task(project_name, project_path, data)
             // cmake ..
             data = _M_create_cmake_task(project_name, project_path, data)
+            // make
+            data = _M_create_make_task(project_name, project_path, data)
+            const new_content = stringify(data, null, 4);
+            fs.writeFile(tasks_json_uri.path, new_content, 'utf8', (err) => {
+            });
+        }
+        catch (e) {
+            console.error("Error in parsing tasks.json content: ", e);
+        }
+    });
+}
+async function create_example_build_task(project_name: string, project_path: string, lib_name: string, workspace_uri: vscode.Uri) {
+    const tasks_json_uri = workspace_uri.with({
+        path: path.join(workspace_uri.path, '.vscode', 'tasks.json')
+    });
+    // try to touch tasks.json
+    if (!fs.existsSync(tasks_json_uri.path)) {
+        vscode.window.showWarningMessage('tasks.json not existed');
+        await vscode.commands.executeCommand('workbench.action.tasks.configureDefaultBuildTask');
+        return;
+    }
+    fs.readFile(tasks_json_uri.path, 'utf8', (err, old_content) => {
+        if (err) return;
+        try {
+            let data = parse(old_content);
+            // mkdir -p build
+            data = _M_create_mkdir_task(project_name, project_path, data)
+            // cmake ..
+            data = _M_create_example_cmake_task(project_name, project_path, lib_name, data)
             // make
             data = _M_create_make_task(project_name, project_path, data)
             const new_content = stringify(data, null, 4);
@@ -140,6 +169,28 @@ function _M_create_cmake_task(project_name: string, project_path: string, data: 
                 ".."
             ],
             dependsOn: [
+                project_name + '/mkdir'
+            ]
+        }
+        data.tasks.push(cmake_task);
+    }
+    return data;
+}
+function _M_create_example_cmake_task(project_name: string, project_path: string, lib_name: string, data: any) {
+    const existing_task = data.tasks.find((task: any) => task.label === project_name + '/cmake');
+    if (!existing_task) {
+        const cmake_task = {
+            label: project_name + '/cmake',
+            type: "shell",
+            command: "cmake",
+            options: {
+                cwd: "${workspaceFolder}" + project_path + "/build"
+            },
+            args: [
+                ".."
+            ],
+            dependsOn: [
+                lib_name + '/make',
                 project_name + '/mkdir'
             ]
         }
