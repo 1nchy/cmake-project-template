@@ -40,6 +40,6 @@ jobs:
         GITHUB_TOKEN: ${{secrets.RELEASE_TOKEN}}
       with:
         upload_url: ${{steps.create_release.outputs.upload_url}}
-        asset_path: ./cmake-project-template-${{github.ref_name}}.vsix
+        asset_path: ./cmake-project-template-*.vsix
         asset_name: cmake-project-template-${{github.ref_name}}.vsix
         asset_content_type: application/vsix
