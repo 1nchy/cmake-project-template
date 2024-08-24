@@ -2,7 +2,7 @@
   "name": "cmake-project-template",
   "displayName": "cmake project template",
   "description": "the template of cmake project and third library",
-  "version": "1.2.0",
+  "version": "v1.2.0",
   "publisher": "1nchy",
   "engines": {
     "vscode": "^1.92.0"
