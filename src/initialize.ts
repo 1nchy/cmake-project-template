@@ -240,10 +240,11 @@ async function create_project_file(project_name: string, workspace_uri: vscode.U
     _M_mkdir(workspace_uri, ['src']);
     _M_mkdir(workspace_uri, ['third']);
     _M_mkdir(workspace_uri, ['cmake']);
-    await _M_touch_from_repo(workspace_uri, 'project_template', ['cmake', 'Findthird_lib.cmake']);
-    await _M_touch_from_repo(workspace_uri, 'project_template', ['cmake', 'Findheader_only_third_lib.cmake']);
+    _M_mkdir(workspace_uri, ['lib']);
     await _M_touch_from_repo(workspace_uri, 'project_template', ['.gitignore']);
     await _M_touch_from_repo(workspace_uri, 'project_template', ['CMakeLists.txt']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['cmake', 'Findthird_lib.cmake']);
+    await _M_touch_from_repo(workspace_uri, 'project_template', ['cmake', 'Findheader_only_third_lib.cmake']);
     _M_touch(workspace_uri, ['README.md']);
     _M_touch(workspace_uri, ['main.cpp']);
 
