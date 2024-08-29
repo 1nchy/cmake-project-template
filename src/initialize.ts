@@ -227,6 +227,14 @@ function _M_create_launch_task(project_name: string, project_path: string, data:
             program: '${workspaceFolder}' + project_path + '/build/' + project_name,
             args: [],
             cwd: "${workspaceFolder}" + project_path, // + "/build",
+            miDebuggerPath: "gdb",
+            setupCommands: [
+                {
+                    description: "Enable pretty-printing for gdb",
+                    text: "-enable-pretty-printing",
+                    ignoreFailures: true
+                }
+            ],
             preLaunchTask: project_name + '/make'
         }
         data.configurations.push(launch_task);
