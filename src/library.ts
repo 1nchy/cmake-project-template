@@ -29,6 +29,7 @@ async function create_file(name: string, uri: vscode.Uri) : Promise<void> {
     await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['.gitignore']);
     await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['CMakeLists.txt']);
     await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['test', 'CMakeLists.txt']);
+    await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['test', 'main.hpp']);
     await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['cmake', 'Findthird_lib.cmake']);
     await repository.fetch_from_reposity(uri, repository.constexpr.library_template, ['cmake', 'Findheader_only_third_lib.cmake']);
     utils.touch(uri, ['README.md']);
