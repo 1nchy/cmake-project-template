@@ -12,6 +12,7 @@ export const branch = 'master';
 export const project_template = 'project_template';
 export const example_template = 'example_template';
 export const library_template = 'third_lib_template';
+export const testing_framework = 'testing_framework';
 
 }
 
